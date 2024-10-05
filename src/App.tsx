@@ -19,6 +19,10 @@ export function App() {
     [paginatedTransactions, transactionsByEmployee]
   )
 
+  const showLoadMore = useMemo(() => {
+    return paginatedTransactions?.nextPage != null && !transactionsByEmployee
+  }, [paginatedTransactions, transactionsByEmployee])
+
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
@@ -51,7 +55,7 @@ export function App() {
         <hr className="RampBreak--l" />
 
         <InputSelect<Employee>
-          isLoading={isLoading}
+          isLoading={employeeUtils.loading}
           defaultValue={EMPTY_EMPLOYEE}
           items={employees === null ? [] : [EMPTY_EMPLOYEE, ...employees]}
           label="Filter by employee"
@@ -65,7 +69,8 @@ export function App() {
               return
             }
 
-            await loadTransactionsByEmployee(newValue.id)
+            if (newValue.id) await loadTransactionsByEmployee(newValue.id)
+            else loadAllTransactions()
           }}
         />
 
@@ -74,7 +79,7 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
+          {transactions !== null && showLoadMore && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
